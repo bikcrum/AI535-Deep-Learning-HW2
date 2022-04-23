@@ -318,9 +318,11 @@ class FeedForwardNeuralNetwork:
                 self.layers.append(ReLU())
             self.layers.append(LinearLayer(hidden_dim, output_dim))
 
+    # returns (weights, biases) for all linear layers
     def get_params(self):
-        return list(zip(*[(layer.W, layer.b) for layer in self.layers if type(layer) is LinearLayer]))
+        return zip(*map(lambda l: (l.W, l.b), filter(lambda l: type(l) is LinearLayer, self.layers)))
 
+    # sets (weights, biases) to all linear layers
     def apply_params(self, weights, biases):
         for i, layer in enumerate(filter(lambda l: type(l) is LinearLayer, self.layers)):
             layer.W = weights[i]
