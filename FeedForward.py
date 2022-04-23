@@ -62,18 +62,18 @@ class ReLU:
 
 
 class AdamOptimizer:
-    def __init__(self, beta=0.9, weight_decay=0, epsilon=1e-8):
+    def __init__(self, beta=(0.9, 0.999), weight_decay=0.0, epsilon=1e-8):
         self.beta = beta
         self.weight_decay = weight_decay
         self.epsilon = epsilon
         self.m, self.v = 0, 0
 
     def get_step(self, lr, f, df):
-        self.m = self.beta * self.m + (1 - self.beta) * (df + self.weight_decay * f)
-        self.v = self.beta * self.v + (1 - self.beta) * (df + self.weight_decay * f) ** 2
+        self.m = self.beta[0] * self.m + (1 - self.beta[0]) * (df + self.weight_decay * f)
+        self.v = self.beta[1] * self.v + (1 - self.beta[1]) * (df + self.weight_decay * f) ** 2
 
-        _m = self.m / (1 - self.beta)
-        _v = self.v / (1 - self.beta)
+        _m = self.m / (1 - self.beta[0])
+        _v = self.v / (1 - self.beta[1])
 
         return lr * _m / (np.sqrt(_v) + self.epsilon)
 
@@ -131,8 +131,8 @@ class LinearLayer:
     ######################################################
     def step(self, step_size):
         # raise Exception('Student error: You haven\'t implemented the step for LinearLayer yet.')
-        self.W = self.W - step_size * self.weight_optimizer.get_step(step_size, self.W, self.grad_weights)
-        self.b = self.b - step_size * self.bias_optimizer.get_step(step_size, self.b, self.grad_bias)
+        self.W = self.W - self.weight_optimizer.get_step(step_size, self.W, self.grad_weights)
+        self.b = self.b - self.bias_optimizer.get_step(step_size, self.b, self.grad_bias)
 
 
 ######################################################
@@ -161,15 +161,23 @@ def main():
     # Set optimization parameters (NEED TO CHANGE THESE)
     batch_size = 32
     max_epochs = 100
-    step_size = 0.001
+    step_size = 0.0001
 
     number_of_layers = 2
     width_of_layers = 32
 
-    load_trained_model = True
+    load_trained_model = False
 
     # Load data
     X_train, Y_train, X_val, Y_val, X_test, Y_test = loadCIFAR10Data()
+
+    # Log hyperparameters
+    logging.info("[Hyperparameters]")
+    logging.info(f"Batch size: {batch_size}")
+    logging.info(f"Max epochs: {max_epochs}")
+    logging.info(f"Step size: {step_size}")
+    logging.info(f"Number of layers: {number_of_layers}")
+    logging.info(f"Width of layers: {width_of_layers}")
 
     # Some helpful dimensions
     num_examples, input_dim = X_train.shape
