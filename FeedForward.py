@@ -82,10 +82,10 @@ class LinearLayer:
     # Initialize our layer with (input_dim, output_dim) weight matrix and a (1,output_dim) bias vector
     def __init__(self, input_dim, output_dim):
         # raise Exception('Student error: You haven\'t implemented the init for LinearLayer yet.')
-        self.weight_optimizer = AdamOptimizer()
+        self.weight_optimizer = AdamOptimizer(weight_decay=0.09)
         self.bias_optimizer = AdamOptimizer()
 
-        self.W = np.random.random((input_dim, output_dim)) * np.sqrt(2 / input_dim)
+        self.W = np.random.normal(0, np.sqrt(2 / input_dim), (input_dim, output_dim))
         self.b = np.zeros(shape=(1, output_dim))
 
     # During the forward pass, we simply compute XW+b
@@ -159,17 +159,22 @@ def softmax(x):
 
 def main():
     # Set optimization parameters (NEED TO CHANGE THESE)
-    batch_size = 32
+    batch_size = 256
     max_epochs = 100
-    step_size = 0.0001
+    step_size = 3e-4
 
-    number_of_layers = 2
-    width_of_layers = 32
+    number_of_layers = 3
+    width_of_layers = 64
 
     load_trained_model = False
 
     # Load data
     X_train, Y_train, X_val, Y_val, X_test, Y_test = loadCIFAR10Data()
+
+    # Normalize
+    X_train, mu, sigma = normalize(X_train)
+    X_val, _, _ = normalize(X_val, mu, sigma)
+    X_test, _, _ = normalize(X_test, mu, sigma)
 
     # Log hyperparameters
     logging.info("[Hyperparameters]")
@@ -211,7 +216,7 @@ def main():
         # for each batch in data:
         for i in range(0, len(X_train), batch_size):
             # Gather batch
-            inputs = X_train[indices][i:i + batch_size] / 255.0
+            inputs = X_train[indices][i:i + batch_size]
             labels = Y_train[indices][i:i + batch_size]
 
             # Predict
@@ -241,17 +246,25 @@ def main():
         ###############################################################
         # epoch_avg_loss -- average training loss across batches this epoch
         # epoch_avg_acc -- average accuracy across batches this epoch
-        epoch_avg_loss, epoch_avg_acc = evaluate(net, X_train / 255.0, Y_train, batch_size)
+        epoch_avg_loss, epoch_avg_acc = evaluate(net, X_train, Y_train, batch_size)
         # vacc -- validation accuracy this epoch
-        vloss, vacc = evaluate(net, X_val / 255.0, Y_val, batch_size)
+        vloss, vacc = evaluate(net, X_val, Y_val, batch_size)
+
+        # Early stopping
+        # if len(val_losses) > 0 and vloss > val_losses[-1]:
+        #     break
+
         val_losses.append(vloss)
         val_accs.append(vacc)
         ###############################################################
 
         logging.info(
-            "[Epoch {:3}]   Loss:  {:8.4}     Train Acc:  {:8.4}%      Val Acc:  {:8.4}%".format(epoch, epoch_avg_loss,
-                                                                                                 epoch_avg_acc,
-                                                                                                 vacc))
+            "[Epoch {:3}]   Train Loss:  {:8.4}     Val Loss:  {:8.4}     Train Acc:  {:8.4}%      Val Acc:  {:8.4}%".format(
+                epoch,
+                epoch_avg_loss,
+                vloss,
+                epoch_avg_acc,
+                vacc))
 
     ###############################################################
     # Code for producing output plot requires
@@ -291,7 +304,7 @@ def main():
     ################################
     # Q7 Tune and Evaluate on Test
     ################################
-    _, tacc = evaluate(net, X_test / 255.0, Y_test, batch_size)
+    _, tacc = evaluate(net, X_test, Y_test, batch_size)
     print(tacc)
 
     # Save model params to resume training
@@ -368,6 +381,25 @@ def loadCIFAR10Data():
 
     return X_train, Y_train, X_val, Y_val, X_test, Y_test
 
+
+# def normalize(X, means=None, stds=None):
+#     if means is None or stds is None:
+#         means = [X[:, :1024].mean(), X[:, 1024:2048].mean(), X[:, 2048:].mean()]
+#         stds = [X[:, :1024].std(), X[:, 1024:2048].std(), X[:, 2048:].std()]
+#
+#     X[:, :1024] = (X[:, :1024] - means[0]) / stds[0]
+#     X[:, 1024:2048] = (X[:, 1024:2048] - means[1]) / stds[1]
+#     X[:, 2048:] = (X[:, 2048:] - means[2]) / stds[2]
+#
+#     return means, stds
+
+
+def normalize(X, mean=None, std=None):
+    if mean is None or std is None:
+        mean = X.mean(axis=0)
+        std = X.std(axis=0)
+
+    return (X - mean) / std, mean, std
 
 def displayExample(x):
     r = x[:1024].reshape(32, 32)
