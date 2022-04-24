@@ -8,6 +8,8 @@ font = {'weight': 'normal', 'size': 22}
 matplotlib.rc('font', **font)
 import logging
 
+import cv2
+
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -159,7 +161,7 @@ def softmax(x):
 
 def main():
     # Set optimization parameters (NEED TO CHANGE THESE)
-    batch_size = 256
+    batch_size = 512
     max_epochs = 100
     step_size = 3e-4
 
@@ -170,6 +172,11 @@ def main():
 
     # Load data
     X_train, Y_train, X_val, Y_val, X_test, Y_test = loadCIFAR10Data()
+
+    X_train_aug = augment(X_train)
+
+    Y_train = np.tile(Y_train, reps=(len(X_train_aug) // len(X_train) + 1, 1))
+    X_train = np.concatenate((X_train, X_train_aug), axis=0)
 
     # Normalize
     X_train, mu, sigma = normalize(X_train)
@@ -401,6 +408,74 @@ def normalize(X, mean=None, std=None):
 
     return (X - mean) / std, mean, std
 
+
+def image_to_flat_array(images):
+    r, g, b = np.moveaxis(images, 3, 0)
+
+    n, dim, channel = images.shape[0], (images.shape[1], images.shape[2]), images.shape[3]
+
+    x = np.zeros((n, np.prod(dim) * channel), dtype=int)
+
+    x[:, :1024] = r.reshape(n, -1)
+    x[:, 1024:2048] = g.reshape(n, -1)
+    x[:, 2048:] = b.reshape(n, -1)
+
+    return x
+
+
+def flat_array_to_image(x):
+    r = x[:, :1024].reshape(-1, 32, 32)
+    g = x[:, 1024:2048].reshape(-1, 32, 32)
+    b = x[:, 2048:].reshape(-1, 32, 32)
+
+    images = np.stack([r, g, b], axis=3)
+    return images
+
+
+def augment(x):
+    def rotate_image(image, angle):
+        center = tuple(np.array(image.shape[0:2]) / 2)
+        rot_mat = cv2.getRotationMatrix2D(center, angle, 1.0)
+        return cv2.warpAffine(image, rot_mat, image.shape[0:2], flags=cv2.INTER_LINEAR)
+
+    images = flat_array_to_image(x)
+
+    # flip vertically
+    flipped_images = np.array(list(map(lambda image: cv2.flip(image, 1), images)))
+
+    # scale (must be greater than 1)
+    scale_factor = 1.2
+    dim = (32, 32)
+
+    target_size = (int(dim[0] * scale_factor), int(dim[1] * scale_factor))
+    scaled_images = np.array(
+        list(map(lambda image: cv2.resize(image, target_size, interpolation=cv2.INTER_AREA), images)))
+
+    scaled_images = scaled_images[:,
+                    target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
+                    target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
+                    :]
+
+    # rotate
+    rotated_images = np.array(
+        list(map(lambda image: rotate_image(image, np.random.randint(-15, 15)), images)))
+    # can scale to remove padding due to rotation
+    # scale_factor = np.sqrt(2)
+    # dim = (32, 32)
+    # target_size = (int(dim[0] * scale_factor), int(dim[1] * scale_factor))
+    # rotated_images = np.array(
+    #     list(map(lambda image: cv2.resize(image, target_size, interpolation=cv2.INTER_AREA), rotated_images)))
+    # rotated_images = rotated_images[:,
+    #                  target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
+    #                  target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
+    #                  :]
+
+    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images))
+    array = image_to_flat_array(augmented_images)
+
+    return array
+
+
 def displayExample(x):
     r = x[:1024].reshape(32, 32)
     g = x[1024:2048].reshape(32, 32)
@@ -412,4 +487,6 @@ def displayExample(x):
 
 
 if __name__ == "__main__":
+    X_train, Y_train, X_val, Y_val, X_test, Y_test = loadCIFAR10Data()
+    # augment(X_train)
     main()
