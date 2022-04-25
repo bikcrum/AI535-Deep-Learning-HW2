@@ -244,7 +244,7 @@ def main():
             losses.append(loss)
 
             true_count = np.count_nonzero([outputs.argmax(axis=1) == labels.flatten()])
-            accs.append(true_count / batch_size)
+            accs.append(true_count / len(outputs))
 
         # Evaluate performance on validation.
 
@@ -367,17 +367,17 @@ class FeedForwardNeuralNetwork:
 #####################################################
 
 def loadCIFAR10Data():
-    with open("/content/drive/MyDrive/Spring 2022/AI 535/Homework/Assignment2/cifar10_hst_train", 'rb') as fo:
+    with open("cifar10_hst_train", 'rb') as fo:
         data = pickle.load(fo)
     X_train = data['images']
     Y_train = data['labels']
 
-    with open("/content/drive/MyDrive/Spring 2022/AI 535/Homework/Assignment2/cifar10_hst_val", 'rb') as fo:
+    with open("cifar10_hst_val", 'rb') as fo:
         data = pickle.load(fo)
     X_val = data['images']
     Y_val = data['labels']
 
-    with open("/content/drive/MyDrive/Spring 2022/AI 535/Homework/Assignment2/cifar10_hst_test", 'rb') as fo:
+    with open("cifar10_hst_test", 'rb') as fo:
         data = pickle.load(fo)
     X_test = data['images']
     Y_test = data['labels']
