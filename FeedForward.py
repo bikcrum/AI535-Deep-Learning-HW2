@@ -84,7 +84,7 @@ class LinearLayer:
     # Initialize our layer with (input_dim, output_dim) weight matrix and a (1,output_dim) bias vector
     def __init__(self, input_dim, output_dim):
         # raise Exception('Student error: You haven\'t implemented the init for LinearLayer yet.')
-        self.weight_optimizer = AdamOptimizer(weight_decay=0.09)
+        self.weight_optimizer = AdamOptimizer(weight_decay=0.03)
         self.bias_optimizer = AdamOptimizer()
 
         self.W = np.random.normal(0, np.sqrt(2 / input_dim), (input_dim, output_dim))
@@ -165,7 +165,7 @@ def main():
     max_epochs = 100
     step_size = 3e-4
 
-    number_of_layers = 3
+    number_of_layers = 4
     width_of_layers = 64
 
     load_trained_model = False
@@ -367,17 +367,17 @@ class FeedForwardNeuralNetwork:
 #####################################################
 
 def loadCIFAR10Data():
-    with open("cifar10_hst_train", 'rb') as fo:
+    with open("/content/drive/MyDrive/Spring 2022/AI 535/Homework/Assignment2/cifar10_hst_train", 'rb') as fo:
         data = pickle.load(fo)
     X_train = data['images']
     Y_train = data['labels']
 
-    with open("cifar10_hst_val", 'rb') as fo:
+    with open("/content/drive/MyDrive/Spring 2022/AI 535/Homework/Assignment2/cifar10_hst_val", 'rb') as fo:
         data = pickle.load(fo)
     X_val = data['images']
     Y_val = data['labels']
 
-    with open("cifar10_hst_test", 'rb') as fo:
+    with open("/content/drive/MyDrive/Spring 2022/AI 535/Homework/Assignment2/cifar10_hst_test", 'rb') as fo:
         data = pickle.load(fo)
     X_test = data['images']
     Y_test = data['labels']
@@ -458,19 +458,33 @@ def augment(x):
 
     # rotate
     rotated_images = np.array(
-        list(map(lambda image: rotate_image(image, np.random.randint(-15, 15)), images)))
+        list(map(lambda image: rotate_image(image, -15), images)))
     # can scale to remove padding due to rotation
-    # scale_factor = np.sqrt(2)
-    # dim = (32, 32)
-    # target_size = (int(dim[0] * scale_factor), int(dim[1] * scale_factor))
-    # rotated_images = np.array(
-    #     list(map(lambda image: cv2.resize(image, target_size, interpolation=cv2.INTER_AREA), rotated_images)))
-    # rotated_images = rotated_images[:,
-    #                  target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
-    #                  target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
-    #                  :]
+    scale_factor = np.sqrt(1.6)
+    dim = (32, 32)
+    target_size = (int(dim[0] * scale_factor), int(dim[1] * scale_factor))
+    rotated_images = np.array(
+        list(map(lambda image: cv2.resize(image, target_size, interpolation=cv2.INTER_AREA), rotated_images)))
+    rotated_images = rotated_images[:,
+                     target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
+                     target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
+                     :]
 
-    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images))
+    # rotate
+    rotated_images1 = np.array(
+        list(map(lambda image: rotate_image(image, 15), images)))
+    # can scale to remove padding due to rotation
+    scale_factor = np.sqrt(1.6)
+    dim = (32, 32)
+    target_size = (int(dim[0] * scale_factor), int(dim[1] * scale_factor))
+    rotated_images1 = np.array(
+        list(map(lambda image: cv2.resize(image, target_size, interpolation=cv2.INTER_AREA), rotated_images1)))
+    rotated_images1 = rotated_images1[:,
+                     target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
+                     target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
+                     :]
+
+    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images, rotated_images1))
     array = image_to_flat_array(augmented_images)
 
     return array
@@ -487,6 +501,4 @@ def displayExample(x):
 
 
 if __name__ == "__main__":
-    X_train, Y_train, X_val, Y_val, X_test, Y_test = loadCIFAR10Data()
-    # augment(X_train)
     main()
