@@ -480,11 +480,22 @@ def augment(x):
     rotated_images1 = np.array(
         list(map(lambda image: cv2.resize(image, target_size, interpolation=cv2.INTER_AREA), rotated_images1)))
     rotated_images1 = rotated_images1[:,
-                     target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
-                     target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
-                     :]
+                      target_size[0] // 2 - dim[0] // 2:target_size[0] // 2 + dim[0] // 2,
+                      target_size[1] // 2 - dim[1] // 2:target_size[1] // 2 + dim[1] // 2,
+                      :]
 
-    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images, rotated_images1))
+    # gaussian noise
+    noisy_images = images.copy()
+
+    noise = np.zeros_like(images[0])
+    cv2.randn(noise, 0, 10)
+
+    noisy_images += noise
+
+    # gaussian blur
+    # x = cv2.GaussianBlur(images[4], (3, 3), cv2.BORDER_DEFAULT)
+
+    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images, rotated_images1, noisy_images))
     array = image_to_flat_array(augmented_images)
 
     return array
