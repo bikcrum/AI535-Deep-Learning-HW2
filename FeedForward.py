@@ -211,7 +211,7 @@ def main():
     accs = []
     val_accs = []
 
-    num_iteration_per_epoch = int(np.ceil(len(X_train) / batch_size))
+    num_batches = int(np.ceil(len(X_train) / batch_size))
 
     # raise Exception('Student error: You haven\'t implemented the training loop yet.')
 
@@ -255,8 +255,8 @@ def main():
         ###############################################################
         # epoch_avg_loss -- average training loss across batches this epoch
         # epoch_avg_acc -- average accuracy across batches this epoch
-        epoch_avg_loss = np.mean(losses[-num_iteration_per_epoch:])
-        epoch_avg_acc = np.mean(accs[-num_iteration_per_epoch:])
+        epoch_avg_loss = np.mean(losses[-num_batches:])
+        epoch_avg_acc = np.mean(accs[-num_batches:])
         # vacc -- validation accuracy this epoch
         vloss, vacc = evaluate(net, X_val, Y_val, batch_size)
 
