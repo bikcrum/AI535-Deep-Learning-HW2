@@ -165,8 +165,8 @@ def main():
     max_epochs = 100
     step_size = 3e-4
 
-    number_of_layers = 4
-    width_of_layers = 64
+    number_of_layers = 5
+    width_of_layers = 128
 
     load_trained_model = False
 
@@ -211,6 +211,8 @@ def main():
     accs = []
     val_accs = []
 
+    num_iteration_per_epoch = int(np.ceil(len(X_train) / batch_size))
+
     # raise Exception('Student error: You haven\'t implemented the training loop yet.')
 
     # For each epoch below max epochs
@@ -253,7 +255,8 @@ def main():
         ###############################################################
         # epoch_avg_loss -- average training loss across batches this epoch
         # epoch_avg_acc -- average accuracy across batches this epoch
-        epoch_avg_loss, epoch_avg_acc = evaluate(net, X_train, Y_train, batch_size)
+        epoch_avg_loss = np.mean(losses[-num_iteration_per_epoch:])
+        epoch_avg_acc = np.mean(accs[-num_iteration_per_epoch:])
         # vacc -- validation accuracy this epoch
         vloss, vacc = evaluate(net, X_val, Y_val, batch_size)
 
