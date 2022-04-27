@@ -495,7 +495,7 @@ def augment(x):
     # gaussian blur
     # x = cv2.GaussianBlur(images[4], (3, 3), cv2.BORDER_DEFAULT)
 
-    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images, rotated_images1, noisy_images))
+    augmented_images = np.concatenate((flipped_images, scaled_images, rotated_images, rotated_images1))
     array = image_to_flat_array(augmented_images)
 
     return array
