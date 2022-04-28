@@ -165,7 +165,7 @@ def main():
     max_epochs = 100
     step_size = 3e-4
 
-    number_of_layers = 5
+    number_of_layers = 6
     width_of_layers = 128
 
     load_trained_model = False
